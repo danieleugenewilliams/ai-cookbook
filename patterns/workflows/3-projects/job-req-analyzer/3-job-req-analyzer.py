@@ -101,6 +101,38 @@ class JobAnalysis(BaseModel):
     )
 
 
+class JobAnalysisSummary(BaseModel):
+    """Represents a summary of the job analysis."""
+
+    job_title: str = Field(..., description="Title of the job")
+
+    preliminary_score: float = Field(
+        default=0.0, description="Preliminary score based on initial analysis"
+    )
+
+    final_score: float = Field(
+        default=0.0, description="Final score after detailed analysis"
+    )
+
+    resilience_level: str = Field(
+        default="", description="Resilience level based on the final score"
+    )
+
+    automation_resilience_analysis: str = Field(
+        default="", description="Detailed analysis of automation resilience"
+    )
+
+    recommendations_to_improve_resilience: Optional[list[str]] = Field(
+        default=None,
+        description="Recommendations to improve the job's resilience to automation and AI",
+    )
+
+    natural_language_analysis: Optional[str] = Field(
+        default=None,
+        description="Natural language summary of the job analysis, starting with the resilience level, preliminary score, final score, and recommendations, then followed by an explanation of the resilence level, final score, preliminary score, and the implications on the human in the role.",
+    )
+
+
 # -----------------------------------------------------------
 # Step 2: Define the functions for job requirements analysis
 # -----------------------------------------------------------
@@ -171,24 +203,54 @@ def analyze_automation_resilience(job_description: JobDescription) -> JobAnalysi
     return completion.choices[0].message.parsed
 
 
+def natural_language_analysis(job_analysis: JobAnalysis) -> JobAnalysisSummary:
+    """Perform a natural language analysis of the job description."""
+    logger.info("Performing natural language analysis...")
+
+    analysis_prompt = """
+    Review the job analysis and provide a detailed natural language overview.
+    The analysis should include:
+        - A summary of the job requirements.
+        - Key skills and qualifications required.
+        - Potential challenges and opportunities in the role.
+        - User-friendly language that can be easily understood by job seekers and employers.
+    """
+
+    completion = client.beta.chat.completions.parse(
+        model=model,
+        messages=[
+            {
+                "role": "system",
+                "content": analysis_prompt,
+            },
+            {
+                "role": "user",
+                "content": f"Job Analysis: {job_analysis.model_dump_json(indent=2)}",
+            },
+        ],
+        response_format=JobAnalysisSummary,
+    )
+    return completion.choices[0].message.parsed
+
+
 # Example usage
 if __name__ == "__main__":
     logger.info("Starting job requirements analysis workflow...")
     # Load the document
 
-    # paralegal = "/Users/danielwilliams/Projects/ai-cookbook/patterns/workflows/3-projects/job-req-analyzer/paralegal.md"
+    # job_path = "paralegal.md"
 
-    # counsel = "/Users/danielwilliams/Projects/ai-cookbook/patterns/workflows/3-projects/job-req-analyzer/assistant-general-counsel.md"
+    # job_path = "assistant-general-counsel.md"
 
-    # electrician = "/Users/danielwilliams/Projects/ai-cookbook/patterns/workflows/3-projects/job-req-analyzer/electrician.md"
+    # job_path = "electrician.md"
 
-    # cybersecurity = "/Users/danielwilliams/Projects/ai-cookbook/patterns/workflows/3-projects/job-req-analyzer/cybersecurity.md"
+    # job_path = "cybersecurity.md"
 
-    software_engineer = "/Users/danielwilliams/Projects/ai-cookbook/patterns/workflows/3-projects/job-req-analyzer/softwareengineer.md"
+    job_path = "softwareengineer.md"
 
     job_desc_text = ""
     with open(
-        software_engineer,
+        job_path,
         "r",
     ) as f:
         job_desc_text = f.read()
@@ -197,5 +259,11 @@ if __name__ == "__main__":
 
     automation_resilience = analyze_automation_resilience(job_desc)
 
+    natural_language_analysis_result = natural_language_analysis(automation_resilience)
+
+    print("Automation Resilience Analysis Result:")
     print(f"{automation_resilience.model_dump_json(indent=2)}")
+
+    print("Natural Language Analysis Result:")
+    print(natural_language_analysis_result)
     logger.info("Job requirements analysis completed successfully.")
