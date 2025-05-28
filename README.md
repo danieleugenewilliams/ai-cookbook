@@ -25,8 +25,20 @@ patterns/
 - Orchestration
 
 ### Projects
-1. **Blog Post Orchestrator**: Demonstrates content generation and management
-2. **Legislation Reviewer**: Analysis of legislative documents using both OpenAI and local LLMs
+1. **Blog Post Orchestrator**: Demonstrates content generation and management using prompt chaining and local LLMs.
+2. **Legislation Reviewer**: Analyzes legislative documents using both OpenAI and local LLMs, with chunking and structured output.
+3. **Image Recognition**: Uses a vision-enabled local LLM (Gemma 3-4B IT QAT) to describe images. 
+   - Example settings for image recognition LLM:
+     - Offload KV Cache to GPU Memory: true
+     - Keep Model in Memory: true
+     - Try mmap(): true
+     - Seed: -1
+     - Flash Attention: true
+     - K Cache Quantization Type: Q8_0
+     - V Cache Quantization Type: Q8_0
+     - Context Length: 30246
+     - Evaluation Batch Size: 512
+     - CPU Thread Pool Size: 8
 
 ## Getting Started
 
