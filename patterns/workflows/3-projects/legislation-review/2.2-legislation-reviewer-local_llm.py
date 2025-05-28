@@ -252,7 +252,7 @@ if __name__ == "__main__":
 
     # Load the document
     with open(
-        "/Users/danielwilliams/Projects/ai-cookbook/patterns/workflows/3-projects/legislation.md",
+        "legislation.md",
         "r",
     ) as f:
         full_text = f.read()
