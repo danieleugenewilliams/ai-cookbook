@@ -1,3 +1,4 @@
+# patterns/workflows/3-projects/image-recognition/1-basic-recognition.py
 """Send an image to the LLM and get a description of the image."""
 
 import os
@@ -7,6 +8,7 @@ from pydantic import BaseModel, Field
 from openai import OpenAI
 from PIL import Image
 from io import BytesIO
+import argparse
 
 # Environment variables
 dotenv.load_dotenv()
@@ -21,7 +23,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Local LLM Setup
-client = OpenAI(base_url="http://127.0.0.1:1234/v1", api_key="not-needed")
+client = OpenAI(base_url="http://127.0.0.1:1234/v1", api_key=api_key)
 model = "gemma-3-4b-it-qat"
 
 # --------------------------------------------------------------------------
@@ -99,25 +101,32 @@ def describe_image(image_path: str) -> ImageDescriptionResponse:
 
 
 # --------------------------------------------------------------------------
-# Step 3: Example Usage
+# Step 3: Example Usage with Command-Line Arguments
 # --------------------------------------------------------------------------
-if __name__ == "__main__":
-    # Example image path
-    image_path = "./images/image-2.jpeg"
-    # Save the output to a markdown file
-    output_path = "./images/image-2-description.md"
 
+
+def main(input_file: str, output_file: str):
     try:
         # Describe the image
-        description_response = describe_image(image_path)
+        description_response = describe_image(input_file)
         print(f"Image Description: {description_response.description}")
 
-        with open(output_path, "w") as f:
+        with open(output_file, "w") as f:
             f.write(f"# Image Description\n\n{description_response.description}\n")
-        logger.info(f"Description saved to {output_path}")
+        logger.info(f"Description saved to {output_file}")
     except Exception as e:
         logger.error(f"Failed to describe image: {e}")
 
-# Note: Replace "path/to/your/image.jpg" with the actual path to your image file.
-# Ensure you have the necessary libraries installed:
-# pip install openai pillow python-dotenv pydantic
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Send an image to the LLM and get a description of the image."
+    )
+    parser.add_argument("input_file", type=str, help="Path to the input image file")
+    parser.add_argument(
+        "output_file", type=str, help="Path to the output markdown file"
+    )
+
+    args = parser.parse_args()
+
+    main(args.input_file, args.output_file)
